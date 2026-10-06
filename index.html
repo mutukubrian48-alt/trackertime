@@ -1,0 +1,713 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="theme-color" content="#07111c">
+	<title>Classmate — Weekly timetable</title>
+	<style>
+		:root {
+			color-scheme: dark;
+			--paper: #07111c;
+			--surface: #101d2b;
+			--ink: #e8f0f7;
+			--muted: #9aabbb;
+			--line: #26394b;
+			--green: #58d6b2;
+			--green-dark: #a0f0d7;
+			--green-soft: #16392f;
+			--orange: #e7a552;
+			--shadow: 0 14px 40px rgba(26, 48, 39, .08);
+		}
+		* { box-sizing: border-box; }
+		body { min-width: 320px; margin: 0; background: var(--paper); color: var(--ink); font-family: Inter, "Segoe UI", sans-serif; }
+		button, input, select { font: inherit; }
+		button { cursor: pointer; }
+		.site-header { min-height: 72px; display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 0 max(24px, calc((100% - 1240px) / 2)); border-bottom: 1px solid var(--line); background: #0b1724; }
+		.brand { display: flex; align-items: center; gap: 10px; color: var(--ink); font-size: 15px; font-weight: 800; letter-spacing: -.4px; text-decoration: none; }
+		.brand-mark { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 10px; background: var(--green); color: white; font-size: 16px; }
+		.header-note { color: var(--muted); font-size: 12px; }
+		.page { width: min(1240px, calc(100% - 48px)); margin: 36px auto 64px; }
+		.hero { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 24px; min-height: 192px; padding: 34px 40px; overflow: hidden; border: 1px solid #1c3a4d; border-radius: 16px; background: linear-gradient(120deg, #0d2635, #102236 56%, #122a37); color: white; box-shadow: var(--shadow); }
+		.hero::after { position: absolute; top: -100px; right: 12%; width: 290px; height: 290px; border: 1px solid rgba(255,255,255,.14); border-radius: 50%; box-shadow: 0 0 0 34px rgba(255,255,255,.035), 0 0 0 70px rgba(255,255,255,.025); content: ""; }
+		.hero-copy, .hero-summary { position: relative; z-index: 1; }
+		.eyebrow { margin: 0 0 10px; color: #86e6c8; font-size: 10px; font-weight: 800; letter-spacing: 1.6px; text-transform: uppercase; }
+		.hero h1 { margin: 0; font-size: clamp(28px, 4vw, 40px); font-weight: 700; letter-spacing: -1.4px; }
+		.hero-copy > p:last-child { margin: 10px 0 0; color: rgba(255,255,255,.73); font-size: 13px; }
+		.hero-summary { display: flex; align-items: center; gap: 18px; padding: 15px 18px; border: 1px solid rgba(255,255,255,.16); border-radius: 11px; background: rgba(255,255,255,.08); }
+		.summary-icon { font-size: 23px; }
+		.summary-count { display: block; font-size: 23px; font-weight: 750; font-variant-numeric: tabular-nums; }
+		.summary-label { display: block; margin-top: 2px; color: rgba(255,255,255,.68); font-size: 10px; }
+		.section-heading { display: flex; align-items: end; justify-content: space-between; gap: 18px; margin: 34px 0 15px; }
+		.section-heading h2 { margin: 0; font-size: 18px; letter-spacing: -.4px; }
+		.section-heading p { margin: 5px 0 0; color: var(--muted); font-size: 11px; }
+		.primary-button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 42px; padding: 0 15px; border: 0; border-radius: 7px; background: var(--green); color: white; font-size: 12px; font-weight: 750; transition: background .16s, transform .16s; }
+		.primary-button:hover { transform: translateY(-1px); background: var(--green-dark); }
+		.primary-button:focus-visible, .quiet-button:focus-visible, .card-action:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid rgba(34,116,94,.28); outline-offset: 2px; }
+		.section-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+		.secondary-button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 42px; padding: 0 12px; border: 1px solid var(--line); border-radius: 7px; background: var(--surface); color: var(--green-dark); font-size: 11px; font-weight: 750; }
+		.secondary-button:hover { border-color: var(--green); background: var(--green-soft); }
+		.week-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; align-items: start; }
+		.day-column { min-width: 0; min-height: 206px; padding: 12px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+		.day-heading { display: flex; align-items: center; justify-content: space-between; gap: 5px; margin-bottom: 10px; padding: 0 2px 9px; border-bottom: 1px solid var(--line); }
+		.day-heading-main { display: flex; align-items: center; gap: 5px; min-width: 0; }
+		.day-heading h3 { margin: 0; font-size: 11px; font-weight: 750; }
+		.day-count { min-width: 19px; height: 19px; display: grid; place-items: center; border-radius: 6px; background: var(--green-soft); color: var(--green-dark); font-size: 9px; font-weight: 750; }
+		.day-remove { flex: 0 0 auto; padding: 3px 4px; border: 0; border-radius: 4px; background: transparent; color: #cf9890; font-size: 9px; }
+		.day-remove:hover { background: #3a242b; color: #ffaba0; }
+		.day-link-box { display: grid; gap: 6px; margin-bottom: 10px; padding: 8px; border: 1px solid var(--line); border-radius: 6px; background: #0b1723; }
+		.day-link-box label { color: var(--muted); font-size: 8px; font-weight: 750; }
+		.day-link-box input { width: 100%; min-width: 0; height: 29px; padding: 0 6px; border: 1px solid var(--line); border-radius: 5px; background: var(--surface); color: var(--ink); font-size: 8px; }
+		.day-link-actions { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+		.day-link-save { padding: 4px 6px; border: 0; border-radius: 4px; background: var(--green-soft); color: var(--green-dark); font-size: 8px; font-weight: 750; }
+		.day-link-open { color: var(--green-dark); font-size: 8px; font-weight: 750; text-decoration: none; }
+		.day-link-open[hidden] { display: none; }
+		.day-link-open:hover { text-decoration: underline; }
+		.day-add-unit { width: 100%; min-height: 29px; margin-top: 10px; padding: 5px; border: 1px dashed #cbd9d0; border-radius: 5px; background: transparent; color: var(--green-dark); font-size: 9px; font-weight: 750; }
+		.day-add-unit:hover { border-color: var(--green); background: var(--green-soft); }
+		.class-list { display: grid; gap: 8px; }
+		.class-card { min-width: 0; padding: 10px 9px; border: 1px solid #29483f; border-left: 3px solid var(--green); border-radius: 7px; background: #12271f; }
+		.class-time { display: block; margin-bottom: 7px; color: var(--green-dark); font-size: 10px; font-weight: 800; font-variant-numeric: tabular-nums; }
+		.class-unit { margin: 0; font-size: 11px; font-weight: 750; line-height: 1.4; overflow-wrap: anywhere; }
+		.class-detail { margin: 6px 0 0; color: #a0b4aa; font-size: 9px; line-height: 1.45; overflow-wrap: anywhere; }
+		.class-link { display: inline-block; margin-top: 8px; color: var(--green-dark); font-size: 9px; font-weight: 750; text-decoration: none; }
+		.class-link:hover { text-decoration: underline; }
+		.class-actions { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 9px; padding-top: 7px; border-top: 1px solid #2a443a; }
+		.class-assessments { margin-top: 10px; border-top: 1px solid #2a443a; }
+		.class-assessments summary { padding: 9px 0 2px; color: var(--green-dark); font-size: 9px; font-weight: 750; cursor: pointer; }
+		.assessment-list { display: grid; gap: 8px; padding-top: 8px; }
+		.unit-assessment { display: grid; gap: 6px; padding: 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); }
+		.unit-assessment-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+		.unit-assessment-heading strong { font-size: 9px; }
+		.unit-assessment-countdown { color: var(--muted); font-size: 8px; font-variant-numeric: tabular-nums; }
+		.unit-assessment-fields { display: grid; gap: 5px; }
+		.unit-assessment-fields input { width: 100%; min-width: 0; height: 30px; padding: 0 7px; border: 1px solid var(--line); border-radius: 5px; background: var(--surface); color: var(--ink); font-size: 9px; }
+		.unit-assessment-actions { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+		.unit-assessment-save { padding: 5px 7px; border: 0; border-radius: 5px; background: var(--green-soft); color: var(--green-dark); font-size: 8px; font-weight: 750; }
+		.unit-assessment-link { color: var(--green-dark); font-size: 8px; font-weight: 750; text-decoration: none; }
+		.unit-assessment-link[hidden] { display: none; }
+		.unit-assessment-link:hover { text-decoration: underline; }
+		.card-action { padding: 0; border: 0; background: none; color: var(--muted); font-size: 9px; font-weight: 700; }
+		.card-action:hover { color: var(--green-dark); text-decoration: underline; }
+		.card-action.delete:hover { color: #b4493d; }
+		.day-empty { margin: 15px 2px; color: #9aa69f; font-size: 10px; line-height: 1.5; }
+		.notice { min-height: 18px; margin: 12px 0; color: var(--green-dark); font-size: 11px; }
+		.notice.error { color: #ff9c91; }
+		.storage-note { display: flex; align-items: center; gap: 8px; margin-top: 20px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 8px; background: #0b1723; color: var(--muted); font-size: 10px; line-height: 1.5; }
+		.storage-note span:first-child { color: var(--green); font-size: 14px; }
+		dialog { width: min(510px, calc(100% - 30px)); max-height: min(88vh, 760px); padding: 0; overflow: auto; border: 1px solid var(--line); border-radius: 13px; background: var(--surface); color: var(--ink); box-shadow: 0 30px 100px rgba(15,35,28,.25); }
+		dialog::backdrop { background: rgba(16, 31, 26, .55); backdrop-filter: blur(3px); }
+		.dialog-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 22px 24px 16px; border-bottom: 1px solid var(--line); }
+		.dialog-head h2 { margin: 0; font-size: 19px; letter-spacing: -.5px; }
+		.dialog-head p { margin: 5px 0 0; color: var(--muted); font-size: 11px; }
+		.close-button { width: 32px; height: 32px; flex: 0 0 auto; border: 1px solid var(--line); border-radius: 7px; background: var(--surface); color: var(--muted); font-size: 17px; }
+		.class-form { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; padding: 20px 24px 24px; }
+		.form-field { display: grid; gap: 6px; min-width: 0; }
+		.form-field.full { grid-column: 1 / -1; }
+		.form-field label { color: var(--ink); font-size: 10px; font-weight: 750; }
+		.form-field input, .form-field select { width: 100%; min-width: 0; height: 40px; padding: 0 11px; border: 1px solid var(--line); border-radius: 6px; outline: 0; background: #0b1723; color: var(--ink); font-size: 11px; }
+		.form-field input:focus, .form-field select:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(34,116,94,.1); }
+		.form-help { margin: -3px 0 0; color: var(--muted); font-size: 9px; }
+		.form-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }
+		.quiet-button { min-height: 40px; padding: 0 13px; border: 1px solid var(--line); border-radius: 7px; background: var(--surface); color: #52645a; font-size: 11px; font-weight: 700; }
+		.day-form { display: grid; gap: 14px; padding: 20px 24px 24px; }
+		@media (max-width: 1100px) { .week-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+		@media (max-width: 650px) {
+			.site-header { min-height: 62px; padding: 0 18px; }
+			.header-note { font-size: 10px; }
+			.page { width: calc(100% - 32px); margin-top: 22px; }
+			.hero { align-items: flex-start; flex-direction: column; min-height: 0; padding: 25px 22px; }
+			.hero::after { right: -100px; }
+			.hero-summary { padding: 10px 12px; }
+			.section-heading { align-items: flex-start; flex-direction: column; margin-top: 26px; }
+			.week-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+			.day-column { min-height: 150px; padding: 10px 8px; }
+			.class-form { gap: 12px; padding: 17px; }
+			.dialog-head { padding: 19px 17px 14px; }
+		}
+		@media (max-width: 390px) {
+			.week-grid { grid-template-columns: 1fr; }
+			.class-form { grid-template-columns: 1fr; }
+			.form-field.full { grid-column: auto; }
+		}
+		@media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+	</style>
+</head>
+<body>
+	<header class="site-header">
+		<a class="brand" href="./" aria-label="Classmate home"><span class="brand-mark" aria-hidden="true">C</span> CLASSMATE</a>
+		<span class="header-note">Your own little corner for class</span>
+	</header>
+	<main class="page">
+		<section class="hero" aria-labelledby="pageTitle">
+			<div class="hero-copy">
+				<p class="eyebrow">Your semester, in sync</p>
+				<h1 id="pageTitle">Class timetable</h1>
+				<p id="todayLabel">Keep your week clear and your classes close.</p>
+			</div>
+			<div class="hero-summary" aria-live="polite">
+				<span class="summary-icon" aria-hidden="true">▦</span>
+				<span><strong class="summary-count" id="classCount">0</strong><span class="summary-label">classes this week</span></span>
+			</div>
+		</section>
+		<div class="section-heading">
+			<div><h2>Your weekly schedule</h2><p>Add units under each day, and save a link for the day or for an individual assessment.</p></div>
+			<div class="section-actions"><button class="secondary-button" id="addDayButton" type="button">＋ Add a day</button><button class="primary-button" id="addClassButton" type="button"><span aria-hidden="true">＋</span> Add a class</button></div>
+		</div>
+		<p class="notice" id="notice" role="status" aria-live="polite"></p>
+		<section class="week-grid" id="weekGrid" aria-label="Weekly class schedule"></section>
+		<p class="storage-note"><span aria-hidden="true">●</span><span>Your timetable is saved only in this browser. It is not synced to other devices.</span></p>
+	</main>
+	<dialog id="classDialog" aria-labelledby="dialogTitle">
+		<div class="dialog-head">
+			<div><h2 id="dialogTitle">Add a class</h2><p>Add the details for one of your weekly classes.</p></div>
+			<button class="close-button" id="closeDialogButton" type="button" aria-label="Close form">×</button>
+		</div>
+		<form class="class-form" id="classForm">
+			<div class="form-field"><label for="classDay">Day</label><select id="classDay" required><option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option></select></div>
+			<div class="form-field"><label for="classUnit">Unit name</label><input id="classUnit" maxlength="100" placeholder="e.g. Introduction to Economics" required></div>
+			<div class="form-field"><label for="classLecturer">Lecturer name</label><input id="classLecturer" maxlength="100" placeholder="e.g. Dr. A. Mutua" required></div>
+			<div class="form-field"><label for="classVenue">Venue</label><input id="classVenue" maxlength="100" placeholder="e.g. Lecture Hall 2" required></div>
+			<div class="form-field"><label for="classStart">Starts at</label><input id="classStart" type="time" required></div>
+			<div class="form-field"><label for="classEnd">Ends at</label><input id="classEnd" type="time" required></div>
+			<div class="form-field full"><label for="classLink">E-learning link <span>(optional)</span></label><input id="classLink" type="url" maxlength="500" placeholder="https://elearning.example.com/unit"><p class="form-help">Paste the link to your unit's e-learning page.</p></div>
+			<div class="form-field full form-actions"><button class="quiet-button" id="cancelEditButton" type="button" hidden>Cancel</button><button class="primary-button" id="saveClassButton" type="submit">Save class</button></div>
+		</form>
+	</dialog>
+	<dialog id="dayDialog" aria-labelledby="dayDialogTitle">
+		<div class="dialog-head">
+			<div><h2 id="dayDialogTitle">Add a day</h2><p>Choose a day name for your weekly schedule.</p></div>
+			<button class="close-button" id="closeDayDialogButton" type="button" aria-label="Close form">×</button>
+		</div>
+		<form class="day-form" id="dayForm">
+			<div class="form-field"><label for="dayName">Day name</label><input id="dayName" maxlength="30" placeholder="e.g. Saturday or Study day" required></div>
+			<div class="form-actions"><button class="quiet-button" id="cancelDayButton" type="button">Cancel</button><button class="primary-button" type="submit">Add day</button></div>
+		</form>
+	</dialog>
+	<script>
+	(() => {
+		const storageKey = 'classmate.timetable.v1';
+		const daysStorageKey = 'classmate.timetable-days.v1';
+		const dayLinksStorageKey = 'classmate.timetable-day-links.v1';
+		const defaultDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+		let days = [...defaultDays];
+		let dayLinks = {};
+		const form = document.getElementById('classForm');
+		const dialog = document.getElementById('classDialog');
+		const dayDialog = document.getElementById('dayDialog');
+		const dayForm = document.getElementById('dayForm');
+		const grid = document.getElementById('weekGrid');
+		const notice = document.getElementById('notice');
+		const assessments = [
+			{ id: 'cat1', label: 'CAT 1' },
+			{ id: 'cat2', label: 'CAT 2' },
+			{ id: 'cat3', label: 'CAT 3' },
+			{ id: 'assignment1', label: 'Assignment 1' },
+			{ id: 'assignment2', label: 'Assignment 2' },
+			{ id: 'mainExam', label: 'Main exam' }
+		];
+		let classes = [];
+		let editingId = null;
+		let noticeTimeout;
+		let countdownInterval;
+
+		const make = (tag, className, text) => {
+			const element = document.createElement(tag);
+			if (className) element.className = className;
+			if (text !== undefined) element.textContent = text;
+			return element;
+		};
+		const announce = (message, isError = false) => {
+			notice.textContent = message;
+			notice.classList.toggle('error', isError);
+			window.clearTimeout(noticeTimeout);
+			noticeTimeout = window.setTimeout(() => { notice.textContent = ''; }, 4000);
+		};
+		const formatTime = (value) => {
+			const [hour, minute] = value.split(':').map(Number);
+			return new Intl.DateTimeFormat(undefined, { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
+				.format(new Date(2000, 0, 1, hour, minute));
+		};
+		const getDaysRemaining = (dateValue) => {
+			const [year, month, day] = dateValue.split('-').map(Number);
+			const targetDay = Date.UTC(year, month - 1, day);
+			const now = new Date();
+			const todayDay = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+			return Math.round((targetDay - todayDay) / 86400000);
+		};
+		const formatAssessmentDate = (dateValue) => {
+			const [year, month, day] = dateValue.split('-').map(Number);
+			return new Intl.DateTimeFormat(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })
+				.format(new Date(year, month - 1, day));
+		};
+		const saveClasses = () => {
+			try {
+				window.localStorage.setItem(storageKey, JSON.stringify(classes));
+				return true;
+			} catch (error) {
+				announce(`Could not save your timetable: ${error.message}`, true);
+				return false;
+			}
+		};
+		const saveDays = () => {
+			try {
+				window.localStorage.setItem(daysStorageKey, JSON.stringify(days));
+				return true;
+			} catch (error) {
+				announce(`Could not save your schedule days: ${error.message}`, true);
+				return false;
+			}
+		};
+		const saveDayLinks = () => {
+			try {
+				window.localStorage.setItem(dayLinksStorageKey, JSON.stringify(dayLinks));
+				return true;
+			} catch (error) {
+				announce(`Could not save your daily links: ${error.message}`, true);
+				return false;
+			}
+		};
+		const loadDays = () => {
+			try {
+				const saved = window.localStorage.getItem(daysStorageKey);
+				if (saved === null) return [...defaultDays];
+				const parsed = JSON.parse(saved);
+				if (!Array.isArray(parsed) || !parsed.length || parsed.some((day) => typeof day !== 'string' || !day.trim())
+					|| new Set(parsed.map((day) => day.trim().toLocaleLowerCase())).size !== parsed.length) {
+					throw new Error('Saved schedule days are invalid.');
+				}
+				return parsed.map((day) => day.trim());
+			} catch (error) {
+				announce(`Could not load your schedule days: ${error.message}`, true);
+				return [...defaultDays];
+			}
+		};
+		const loadDayLinks = () => {
+			try {
+				const saved = window.localStorage.getItem(dayLinksStorageKey);
+				if (saved === null) return {};
+				const parsed = JSON.parse(saved);
+				if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+					throw new Error('Saved daily links are invalid.');
+				}
+				return Object.fromEntries(Object.entries(parsed).filter(([day, link]) => days.includes(day)
+					&& typeof link === 'string' && /^https?:\/\//i.test(link)));
+			} catch (error) {
+				announce(`Could not load your daily links: ${error.message}`, true);
+				return {};
+			}
+		};
+		const normalizeAssessments = (savedAssessments) => {
+			if (!savedAssessments || typeof savedAssessments !== 'object' || Array.isArray(savedAssessments)) return {};
+			return Object.fromEntries(assessments.flatMap(({ id }) => {
+				const saved = savedAssessments[id];
+				if (!saved || typeof saved !== 'object' || Array.isArray(saved)) return [];
+				const date = typeof saved.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(saved.date)
+					? saved.date : '';
+				let link = '';
+				if (typeof saved.link === 'string' && saved.link.trim()) {
+					try {
+						const parsedLink = new URL(saved.link);
+						if (parsedLink.protocol === 'https:' || parsedLink.protocol === 'http:') link = parsedLink.href;
+					} catch {
+						link = '';
+					}
+				}
+				return date || link ? [[id, { date, link }]] : [];
+			}));
+		};
+		const loadClasses = () => {
+			try {
+				const saved = window.localStorage.getItem(storageKey);
+				if (saved === null) return [];
+				const parsed = JSON.parse(saved);
+				if (!Array.isArray(parsed)) throw new Error('Saved timetable data is not a list.');
+				return parsed.filter((entry) => entry && typeof entry.id === 'string'
+					&& typeof entry.day === 'string' && entry.day.trim()
+					&& typeof entry.unit === 'string' && typeof entry.lecturer === 'string'
+					&& typeof entry.venue === 'string' && typeof entry.start === 'string'
+					&& typeof entry.end === 'string' && typeof entry.link === 'string')
+					.map((entry) => ({
+						...entry,
+						day: days.find((day) => day.toLocaleLowerCase() === entry.day.toLocaleLowerCase()) || entry.day,
+						assessments: normalizeAssessments(entry.assessments)
+					}));
+			} catch (error) {
+				announce(`Could not load your saved timetable: ${error.message}`, true);
+				return [];
+			}
+		};
+		const getAssessmentCountdown = (dateValue) => {
+			if (!dateValue) return 'No date set';
+			const remaining = getDaysRemaining(dateValue);
+			if (remaining < 0) return `${Math.abs(remaining)} ${Math.abs(remaining) === 1 ? 'day' : 'days'} ago`;
+			if (remaining === 0) return 'Today';
+			return `${remaining} ${remaining === 1 ? 'day' : 'days'} left`;
+		};
+		const updateCountdowns = () => {
+			grid.querySelectorAll('.unit-assessment').forEach((row) => {
+				const dateValue = row.querySelector('input[type="date"]').value;
+				row.querySelector('.unit-assessment-countdown').textContent = getAssessmentCountdown(dateValue);
+			});
+		};
+		const updateClassDayOptions = () => {
+			const daySelect = document.getElementById('classDay');
+			const selectedDay = daySelect.value;
+			daySelect.replaceChildren(...days.map((day) => {
+				const option = document.createElement('option');
+				option.value = day;
+				option.textContent = day;
+				return option;
+			}));
+			if (days.includes(selectedDay)) daySelect.value = selectedDay;
+		};
+		const renderUnitAssessments = (entry) => {
+			const details = make('details', 'class-assessments');
+			const summary = make('summary', '', 'CATs, assignments & exam');
+			const list = make('div', 'assessment-list');
+			details.append(summary, list);
+			assessments.forEach(({ id, label }) => {
+				const savedAssessment = entry.assessments[id] || { date: '', link: '' };
+				const row = make('section', 'unit-assessment');
+				const heading = make('div', 'unit-assessment-heading');
+				heading.append(make('strong', '', label), make('span', 'unit-assessment-countdown', getAssessmentCountdown(savedAssessment.date)));
+				const fields = make('div', 'unit-assessment-fields');
+				const dateInput = make('input');
+				dateInput.type = 'date';
+				dateInput.value = savedAssessment.date || '';
+				dateInput.setAttribute('aria-label', `${entry.unit} ${label} date`);
+				dateInput.addEventListener('input', () => {
+					row.querySelector('.unit-assessment-countdown').textContent = getAssessmentCountdown(dateInput.value);
+				});
+				const linkInput = make('input');
+				linkInput.type = 'url';
+				linkInput.maxLength = 500;
+				linkInput.placeholder = `${label} e-learning or submission link`;
+				linkInput.value = savedAssessment.link || '';
+				linkInput.setAttribute('aria-label', `${entry.unit} ${label} link`);
+				fields.append(dateInput, linkInput);
+				const actions = make('div', 'unit-assessment-actions');
+				const saveButton = make('button', 'unit-assessment-save', 'Save');
+				saveButton.type = 'button';
+				const openLink = make('a', 'unit-assessment-link', 'Open link ↗');
+				openLink.href = savedAssessment.link || '';
+				openLink.target = '_blank';
+				openLink.rel = 'noopener noreferrer';
+				openLink.hidden = !savedAssessment.link;
+				saveButton.addEventListener('click', () => {
+					let link = linkInput.value.trim();
+					if (link) {
+						try {
+							const parsedLink = new URL(link);
+							if (parsedLink.protocol !== 'https:' && parsedLink.protocol !== 'http:') {
+								announce(`${label} link must use http or https.`, true);
+								linkInput.focus();
+								return;
+							}
+							link = parsedLink.href;
+						} catch {
+							announce(`Enter a valid ${label} link, including https://.`, true);
+							linkInput.focus();
+							return;
+						}
+					}
+					const existingClass = classes.find((item) => item.id === entry.id);
+					if (!existingClass) {
+						announce('This unit is no longer in your timetable.', true);
+						return;
+					}
+					const previousAssessment = existingClass.assessments[id];
+					if (dateInput.value || link) existingClass.assessments[id] = { date: dateInput.value, link };
+					else delete existingClass.assessments[id];
+					if (saveClasses()) {
+						openLink.href = link;
+						openLink.hidden = !link;
+						row.querySelector('.unit-assessment-countdown').textContent = getAssessmentCountdown(dateInput.value);
+						announce(`${entry.unit} ${label} saved.`);
+					} else if (previousAssessment) {
+						existingClass.assessments[id] = previousAssessment;
+					} else {
+						delete existingClass.assessments[id];
+					}
+				});
+				actions.append(saveButton, openLink);
+				row.append(heading, fields, actions);
+				list.append(row);
+			});
+			return details;
+		};
+		const showDay = (day) => {
+			const entries = classes.filter((entry) => entry.day === day)
+				.sort((first, second) => first.start.localeCompare(second.start));
+			const column = make('section', 'day-column');
+			column.setAttribute('aria-label', day);
+			const heading = make('div', 'day-heading');
+			const headingMain = make('div', 'day-heading-main');
+			headingMain.append(make('h3', '', day), make('span', 'day-count', String(entries.length)));
+			const removeDay = make('button', 'day-remove', 'Remove');
+			removeDay.type = 'button';
+			removeDay.setAttribute('aria-label', `Remove ${day}`);
+			removeDay.addEventListener('click', () => {
+				if (days.length === 1) {
+					announce('Keep at least one day in your weekly schedule.', true);
+					return;
+				}
+				if (classes.some((entry) => entry.day === day)) {
+					announce(`Move or delete the classes on ${day} before removing it.`, true);
+					return;
+				}
+				const previousDays = days;
+				const previousLinks = dayLinks;
+				days = days.filter((item) => item !== day);
+				dayLinks = { ...dayLinks };
+				delete dayLinks[day];
+				if (saveDays() && saveDayLinks()) {
+					render();
+					announce(`${day} removed from your schedule.`);
+				} else {
+					days = previousDays;
+					dayLinks = previousLinks;
+					saveDays();
+				}
+			});
+			heading.append(headingMain, removeDay);
+			column.append(heading);
+			const linkBox = make('div', 'day-link-box');
+			const linkLabel = make('label', '', `${day} link`);
+			const linkInput = make('input');
+			linkInput.type = 'url';
+			linkInput.maxLength = 500;
+			linkInput.placeholder = 'Paste daily meeting or class link';
+			linkInput.value = dayLinks[day] || '';
+			linkInput.setAttribute('aria-label', `${day} schedule link`);
+			linkLabel.htmlFor = `day-link-${days.indexOf(day)}`;
+			linkInput.id = linkLabel.htmlFor;
+			const linkActions = make('div', 'day-link-actions');
+			const saveLink = make('button', 'day-link-save', 'Save link');
+			saveLink.type = 'button';
+			saveLink.addEventListener('click', () => {
+				let link = linkInput.value.trim();
+				if (link) {
+					try {
+						const parsedLink = new URL(link);
+						if (parsedLink.protocol !== 'https:' && parsedLink.protocol !== 'http:') {
+							announce(`${day} links must use http or https.`, true);
+							linkInput.focus();
+							return;
+						}
+						link = parsedLink.href;
+					} catch {
+						announce(`Enter a valid ${day} link, including https://.`, true);
+						linkInput.focus();
+						return;
+					}
+				}
+				const previousLink = dayLinks[day];
+				if (link) dayLinks[day] = link;
+				else delete dayLinks[day];
+				if (saveDayLinks()) {
+					openDayLink.href = link;
+					openDayLink.hidden = !link;
+					announce(`${day} link saved.`);
+				} else if (previousLink) {
+					dayLinks[day] = previousLink;
+				} else {
+					delete dayLinks[day];
+				}
+			});
+			const openDayLink = make('a', 'day-link-open', 'Open link ↗');
+			openDayLink.href = dayLinks[day] || '';
+			openDayLink.target = '_blank';
+			openDayLink.rel = 'noopener noreferrer';
+			openDayLink.hidden = !dayLinks[day];
+			linkActions.append(saveLink, openDayLink);
+			linkBox.append(linkLabel, linkInput, linkActions);
+			column.append(linkBox);
+			const addUnit = make('button', 'day-add-unit', '+ Add unit to this day');
+			addUnit.type = 'button';
+			addUnit.addEventListener('click', () => {
+				closeDialog();
+				updateClassDayOptions();
+				document.getElementById('classDay').value = day;
+				openDialog();
+				document.getElementById('classUnit').focus();
+			});
+			column.append(addUnit);
+			if (!entries.length) {
+				column.append(make('p', 'day-empty', 'Nothing planned yet'));
+				return column;
+			}
+			const list = make('div', 'class-list');
+			entries.forEach((entry) => {
+				const card = make('article', 'class-card');
+				card.append(make('time', 'class-time', `${formatTime(entry.start)} – ${formatTime(entry.end)}`));
+				card.append(make('h4', 'class-unit', entry.unit));
+				card.append(make('p', 'class-detail', `Lecturer · ${entry.lecturer}`));
+				card.append(make('p', 'class-detail', `Venue · ${entry.venue}`));
+				if (entry.link) {
+					const link = make('a', 'class-link', 'Open e-learning ↗');
+					link.href = entry.link;
+					link.target = '_blank';
+					link.rel = 'noopener noreferrer';
+					card.append(link);
+				}
+				card.append(renderUnitAssessments(entry));
+				const actions = make('div', 'class-actions');
+				const edit = make('button', 'card-action', 'Edit');
+				edit.type = 'button';
+				edit.addEventListener('click', () => beginEdit(entry));
+				const remove = make('button', 'card-action delete', 'Delete');
+				remove.type = 'button';
+				remove.addEventListener('click', () => {
+					classes = classes.filter((item) => item.id !== entry.id);
+					if (saveClasses()) {
+						if (editingId === entry.id) closeDialog();
+						render();
+						announce('Class deleted.');
+					}
+				});
+				actions.append(edit, remove);
+				card.append(actions);
+				list.append(card);
+			});
+			column.append(list);
+			return column;
+		};
+		const render = () => {
+			updateClassDayOptions();
+			grid.replaceChildren(...days.map(showDay));
+			document.getElementById('classCount').textContent = String(classes.length);
+		};
+		const openDialog = () => {
+			if (typeof dialog.showModal === 'function') dialog.showModal();
+			else dialog.setAttribute('open', '');
+		};
+		const closeDialog = () => {
+			if (typeof dialog.close === 'function' && dialog.open) dialog.close();
+			else dialog.removeAttribute('open');
+			form.reset();
+			editingId = null;
+			document.getElementById('dialogTitle').textContent = 'Add a class';
+			document.getElementById('saveClassButton').textContent = 'Save class';
+			document.getElementById('cancelEditButton').hidden = true;
+		};
+		const beginEdit = (entry) => {
+			editingId = entry.id;
+			document.getElementById('classDay').value = entry.day;
+			document.getElementById('classUnit').value = entry.unit;
+			document.getElementById('classLecturer').value = entry.lecturer;
+			document.getElementById('classVenue').value = entry.venue;
+			document.getElementById('classStart').value = entry.start;
+			document.getElementById('classEnd').value = entry.end;
+			document.getElementById('classLink').value = entry.link;
+			document.getElementById('dialogTitle').textContent = 'Edit class';
+			document.getElementById('saveClassButton').textContent = 'Save changes';
+			document.getElementById('cancelEditButton').hidden = false;
+			openDialog();
+		};
+
+		document.getElementById('addClassButton').addEventListener('click', () => {
+			closeDialog();
+			updateClassDayOptions();
+			openDialog();
+		});
+		document.getElementById('addDayButton').addEventListener('click', () => {
+			dayForm.reset();
+			if (typeof dayDialog.showModal === 'function') dayDialog.showModal();
+			else dayDialog.setAttribute('open', '');
+			document.getElementById('dayName').focus();
+		});
+		document.getElementById('closeDialogButton').addEventListener('click', closeDialog);
+		document.getElementById('cancelEditButton').addEventListener('click', closeDialog);
+		dialog.addEventListener('click', (event) => {
+			if (event.target === dialog) closeDialog();
+		});
+		const closeDayDialog = () => {
+			if (typeof dayDialog.close === 'function' && dayDialog.open) dayDialog.close();
+			else dayDialog.removeAttribute('open');
+			dayForm.reset();
+		};
+		document.getElementById('closeDayDialogButton').addEventListener('click', closeDayDialog);
+		document.getElementById('cancelDayButton').addEventListener('click', closeDayDialog);
+		dayDialog.addEventListener('click', (event) => {
+			if (event.target === dayDialog) closeDayDialog();
+		});
+		dayForm.addEventListener('submit', (event) => {
+			event.preventDefault();
+			const name = document.getElementById('dayName').value.trim();
+			if (!name) return;
+			if (days.some((day) => day.toLocaleLowerCase() === name.toLocaleLowerCase())) {
+				announce(`${name} is already in your weekly schedule.`, true);
+				return;
+			}
+			days.push(name);
+			if (saveDays()) {
+				closeDayDialog();
+				render();
+				announce(`${name} added to your weekly schedule.`);
+			} else {
+				days.pop();
+			}
+		});
+		form.addEventListener('submit', (event) => {
+			event.preventDefault();
+			const start = document.getElementById('classStart').value;
+			const end = document.getElementById('classEnd').value;
+			if (end <= start) {
+				announce('The end time must be later than the start time.', true);
+				document.getElementById('classEnd').focus();
+				return;
+			}
+			const linkField = document.getElementById('classLink');
+			let link = '';
+			if (linkField.value.trim()) {
+				try {
+					const parsedLink = new URL(linkField.value.trim());
+					if (parsedLink.protocol !== 'https:' && parsedLink.protocol !== 'http:') {
+						announce('E-learning links must use http or https.', true);
+						return;
+					}
+					link = parsedLink.href;
+				} catch {
+					announce('Enter a valid e-learning link, including https://.', true);
+					linkField.focus();
+					return;
+				}
+			}
+			const entry = {
+				id: editingId || (window.crypto && typeof window.crypto.randomUUID === 'function'
+					? window.crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`),
+				day: document.getElementById('classDay').value,
+				unit: document.getElementById('classUnit').value.trim(),
+				lecturer: document.getElementById('classLecturer').value.trim(),
+				venue: document.getElementById('classVenue').value.trim(),
+				start,
+				end,
+				link,
+				assessments: editingId ? (classes.find((item) => item.id === editingId)?.assessments || {}) : {}
+			};
+			const existingIndex = classes.findIndex((item) => item.id === editingId);
+			if (existingIndex < 0) classes.push(entry);
+			else classes[existingIndex] = entry;
+			if (saveClasses()) {
+				closeDialog();
+				render();
+				announce(existingIndex < 0 ? 'Class added to your timetable.' : 'Your class changes are saved.');
+			}
+		});
+		const today = new Intl.DateTimeFormat(undefined, { weekday: 'long', month: 'long', day: 'numeric' }).format(new Date());
+		document.getElementById('todayLabel').textContent = `${today} · Keep your week clear and your classes close.`;
+		days = loadDays();
+		classes = loadClasses();
+		classes.forEach((entry) => {
+			if (!days.some((day) => day.toLocaleLowerCase() === entry.day.toLocaleLowerCase())) days.push(entry.day);
+		});
+		if (days.length > 0) saveDays();
+		dayLinks = loadDayLinks();
+		render();
+		countdownInterval = window.setInterval(updateCountdowns, 60000);
+		window.addEventListener('pagehide', () => window.clearInterval(countdownInterval), { once: true });
+	})();
+	</script>
+</body>
+</html>
